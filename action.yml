@@ -1,0 +1,50 @@
+name: JetBrains Product
+description: 'Obtain information regarding JetBrains products'
+inputs:
+  code:
+    description: 'Product code'
+    required: true
+  command:
+    description: 'Command to run'
+    required: true
+  version:
+    description: 'Optional: Specific version to use instead of latest'
+    required: false
+  build:
+    description: 'Optional: Specific build to use instead of latest'
+    required: false
+  dest:
+    description: 'Download destination path'
+    required: false
+  skip_validation:
+    description: 'Skip checksum validation (true/false)'
+    required: false
+    default: 'false'
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Run jetbrains.py
+      shell: bash
+      run: |
+        script_path="${{ github.action_path }}/jetbrains.py"
+
+        cmd_args="--code ${{ inputs.code }}"
+        if [ "${{ inputs.version }}" != "" ]; then
+          cmd_args="$cmd_args --version ${{ inputs.version }}"
+        elif [ "${{ inputs.build }}" != "" ]; then
+          cmd_args="$cmd_args --build ${{ inputs.build }}"
+        fi
+
+        if [ "${{ inputs.dest }}" != "" ]; then
+          cmd_args="$cmd_args --dest ${{ inputs.dest }}"
+        fi
+
+        if [ "${{ inputs.skip_validation }}" == "true" ]; then
+          cmd_args="$cmd_args --skip-validation"
+        fi
+
+        python3 "$script_path" "${{ inputs.command }}" $cmd_args
+
